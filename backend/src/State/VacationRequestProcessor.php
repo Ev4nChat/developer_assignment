@@ -23,7 +23,8 @@ class VacationRequestProcessor implements ProcessorInterface
     public function __construct(
         private ProcessorInterface $persistProcessor,
         private Security $security
-    ) {}
+    ) {
+    }
 
     /**
      * @return VacationRequest

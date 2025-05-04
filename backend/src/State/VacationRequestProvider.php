@@ -14,7 +14,8 @@ class VacationRequestProvider implements ProviderInterface
     public function __construct(
         private VacationRequestRepository $repository,
         private Security $security
-    ) {}
+    ) {
+    }
 
     /**
      * @return iterable<VacationRequest>
