@@ -36,7 +36,7 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
 
     ```
     APP_ENV=dev
-    DATABASE_URL="mysql://user:password@127.0.0.1:3306/vacation_portal"
+    DATABASE_URL="mysql://user:password@127.0.0.1:3306/vacation?serverVersion=8.0"
     JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
     JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
     JWT_PASSPHRASE=
@@ -64,22 +64,10 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
     
     ```
 
-7. Create a manager user via Postman:
-
-      Endpoint `POST http://localhost:8000/api/register` with body
-
-      ```
-      {
-         "name": "Evan Manager",
-         "email": "manager@example.com",
-         "password": "test1234",
-         "employeeCode": "0000001",
-         "role": "ROLE_MANAGER"
-      }
-      ```
-
-8. Run database seeder
+7. Run database seeder
    `docker-compose exec php bin/console app:seed-database`
+
+8. Login with credentials: owner@example.com / password
 
 
 ### 💻 Usage
