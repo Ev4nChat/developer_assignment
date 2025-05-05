@@ -30,6 +30,15 @@ class SeedDatabaseCommand extends Command
     {
         $faker = Factory::create();
 
+        $owner = new User();
+        $owner->setName('Owner Manager');
+        $owner->setEmail('owner@example.com');
+        $owner->setEmployeeCode('0000001');
+        $owner->setRoles(['ROLE_MANAGER']);
+        $owner->setPassword($this->hasher->hashPassword($owner, 'password'));
+
+        $this->em->persist($owner);
+
         // Create 2 managers
         for ($i = 0; $i < 2; $i++) {
             $manager = new User();
