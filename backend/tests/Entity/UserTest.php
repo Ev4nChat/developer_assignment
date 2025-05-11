@@ -3,6 +3,7 @@
 namespace App\Tests\Entity;
 
 use App\Entity\User;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
@@ -36,5 +37,14 @@ class UserTest extends TestCase
         $user->setEmail('identifier@example.com');
 
         $this->assertSame('identifier@example.com', $user->getUserIdentifier());
+    }
+
+    public function testSetRolesThrowsOnInvalidRole(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid role: ROLE_INVALID. Allowed roles are: ROLE_MANAGER, ROLE_EMPLOYEE');
+
+        $user = new User();
+        $user->setRoles(['ROLE_INVALID']);
     }
 }

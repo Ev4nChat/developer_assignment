@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
+use InvalidArgumentException;
 use LogicException;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -93,6 +94,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $vacationRequests;
 
     private const ROLE_USER = 'ROLE_USER';
+    private const ROLE_MANAGER = 'ROLE_MANAGER';
+    private const ROLE_EMPLOYEE = 'ROLE_EMPLOYEE';
+    private const AVAILABLE_ROLES = [
+        self::ROLE_MANAGER,
+        self::ROLE_EMPLOYEE,
+    ];
 
     public function __construct()
     {
@@ -142,6 +149,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function setRoles(array $roles): self
     {
+        foreach ($roles as $role) {
+            if (!in_array($role, self::AVAILABLE_ROLES, true)) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Invalid role: %s. Allowed roles are: %s',
+                        $role,
+                        implode(', ', self::AVAILABLE_ROLES)
+                    )
+                );
+            }
+        }
+
         $this->roles = $roles;
         return $this;
     }
