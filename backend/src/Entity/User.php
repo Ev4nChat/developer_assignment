@@ -92,6 +92,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: VacationRequest::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $vacationRequests;
 
+    public const ROLE_USER = 'ROLE_USER';
+
     public function __construct()
     {
         $this->vacationRequests = new ArrayCollection();
@@ -130,7 +132,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
+        $roles[] = self::ROLE_USER;
 
         return array_unique($roles);
     }
