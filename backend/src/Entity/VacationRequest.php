@@ -13,6 +13,7 @@ use App\State\VacationRequestProcessor;
 use App\State\VacationRequestProvider;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\MaxDepth;
 
@@ -103,6 +104,9 @@ class VacationRequest
 
     public function setEndDate(DateTimeInterface $endDate): self
     {
+        if (isset($this->startDate) && $endDate < $this->startDate) {
+            throw new BadRequestException('End date cannot be before start date');
+        }
         $this->endDate = $endDate;
         return $this;
     }

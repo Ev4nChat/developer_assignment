@@ -5,8 +5,10 @@ namespace App\Tests\Entity;
 use App\Entity\User;
 use App\Entity\VacationRequest;
 use App\Enum\VacationStatus;
+use DateTime;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 class VacationRequestTest extends TestCase
 {
@@ -41,5 +43,34 @@ class VacationRequestTest extends TestCase
     {
         $request = new VacationRequest();
         $this->assertSame(VacationStatus::Pending, $request->getStatus());
+    }
+
+    public function testSetEndDateThrowsWhenBeforeStartDate(): void
+    {
+        $request = new VacationRequest();
+
+        $start = new DateTime('2025-12-10');
+        $end = new DateTime('2025-12-01');
+
+        $request->setStartDate($start);
+
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('End date cannot be before start date');
+
+        $request->setEndDate($end);
+    }
+
+    public function testSetEndDateAcceptsValidRange(): void
+    {
+        $request = new VacationRequest();
+
+        $start = new DateTime('2025-12-01');
+        $end = new DateTime('2025-12-10');
+
+        $request->setStartDate($start);
+        $request->setEndDate($end);
+
+        $this->assertSame($start, $request->getStartDate());
+        $this->assertSame($end, $request->getEndDate());
     }
 }
