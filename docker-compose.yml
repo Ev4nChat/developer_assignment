@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vacation
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  php:
+    build: ./docker/php
+    volumes:
+      - ./backend:/var/www/backend
+    working_dir: /var/www/backend
+    depends_on:
+      - mysql
+    ports:
+      - "9000:9000"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/backend
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    platform: linux/amd64
+
+volumes:
+  mysql_data:

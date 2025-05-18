@@ -1,0 +1,15 @@
+# Symfony / PHP (backend)
+/backend/.phpunit.cache/
+/backend/config/jwt
+/backend/public/bundles/
+/backend/var/
+/backend/vendor/
+/backend/.env.dev
+/backend/.env.test
+/backend/.phpcs-cache
+/backend/coverage-report
+
+# Node (frontend)
+/frontend/node_modules
+
+/vendor
