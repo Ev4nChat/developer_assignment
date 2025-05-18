@@ -9,6 +9,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -47,8 +48,40 @@ class UserProcessor implements ProcessorInterface
 
     private function handlePost(User $user): User
     {
+        if ($this->entityManager->getRepository(User::class)->findOneBy(['email' => $user->getEmail()])) {
+            throw new BadRequestException('Email is already in use.');
+        }
+
         if (empty($user->getPassword())) {
-            throw new RuntimeException('Password must be provided when creating a user.');
+            throw new BadRequestException('Password cannot be empty.');
+        }
+
+        if (trim($user->getPassword()) === '') {
+            throw new BadRequestException('Password must be provided when creating a user.');
+        }
+
+        if (empty($user->getName())) {
+            throw new BadRequestException('Name cannot be empty.');
+        }
+
+        if (trim($user->getName()) === '') {
+            throw new BadRequestException('Name must be provided when creating a user.');
+        }
+
+        if (empty($user->getEmail())) {
+            throw new BadRequestException('Email cannot be empty.');
+        }
+
+        if (!filter_var($user->getEmail(), FILTER_VALIDATE_EMAIL)) {
+            throw new BadRequestException('Invalid email address.');
+        }
+
+        if (empty($user->getEmployeeCode())) {
+            throw new BadRequestException('Employee code cannot be empty.');
+        }
+
+        if (!preg_match('/^\d{7}$/', $user->getEmployeeCode())) {
+            throw new BadRequestException('Employee code must be a 7-digit number.');
         }
 
         if (
@@ -74,10 +107,18 @@ class UserProcessor implements ProcessorInterface
         }
 
         if ($newData->getName() !== null) {
+            if (trim($newData->getName()) === '') {
+                throw new BadRequestException('Name cannot be empty.');
+            }
+
             $originalUser->setName($newData->getName());
         }
 
         if ($newData->getEmail() !== null) {
+            if (!filter_var($newData->getEmail(), FILTER_VALIDATE_EMAIL)) {
+                throw new BadRequestException('Invalid email address.');
+            }
+
             $originalUser->setEmail($newData->getEmail());
         }
 

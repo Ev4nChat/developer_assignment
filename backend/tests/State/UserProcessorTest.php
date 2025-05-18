@@ -10,6 +10,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -22,6 +24,9 @@ class UserProcessorTest extends TestCase
     {
         $user = new User();
         $user->setPassword('plain');
+        $user->setName('Test');
+        $user->setEmail('test@test.com');
+        $user->setEmployeeCode('1234567');
 
         $hashedPassword = 'hashed_password';
 
@@ -46,9 +51,12 @@ class UserProcessorTest extends TestCase
     public function testProcessPostThrowsIfNoPassword(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Password must be provided when creating a user.');
+        $this->expectExceptionMessage('Password cannot be empty.');
 
-        $user = new User(); // No password set
+        $user = new User();
+        $user->setName('Test');
+        $user->setEmail('test@test.com');
+        $user->setEmployeeCode('1234567');
 
         $processor = new UserProcessor(
             $this->createMock(EntityManagerInterface::class),
@@ -69,7 +77,6 @@ class UserProcessorTest extends TestCase
         $this->setUserId($originalUser, 1);
         $originalUser->setName('Old')->setEmail('old@example.com')->setPassword('oldpass');
 
-        // 👇 Fix: use EntityRepository (not just ObjectRepository)
         $mockRepo = $this->createMock(EntityRepository::class);
         $mockRepo->method('find')->with(1)->willReturn($originalUser);
 
@@ -98,6 +105,9 @@ class UserProcessorTest extends TestCase
 
         $user = new User();
         $user->setPassword('test');
+        $user->setName('Test');
+        $user->setEmail('test@test.com');
+        $user->setEmployeeCode('1234567');
 
         $violation = $this->createMock(ConstraintViolationInterface::class);
         $violations = new ConstraintViolationList([$violation]);
@@ -112,6 +122,231 @@ class UserProcessorTest extends TestCase
         );
 
         $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfEmailIsMissing(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Email cannot be empty.');
+
+        $user = new User();
+        $user->setName('test');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfEmailIsInvalid(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Invalid email address.');
+
+        $user = new User();
+        $user->setName('test');
+        $user->setEmail(' ');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfNameIsMissing(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Name cannot be empty.');
+
+        $user = new User();
+        $user->setEmail('testing@example.com');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfNameIsInvalid(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Name must be provided when creating a user.');
+
+        $user = new User();
+        $user->setName(' ');
+        $user->setEmail('testing@example.com');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfEmployeeCodeIsMissing(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Employee code cannot be empty.');
+
+        $user = new User();
+        $user->setName('test');
+        $user->setEmail('testing@example.com');
+        $user->setPassword('plain');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPostThrowsExceptionIfEmployeeCodeIsInvalid(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Employee code must be a 7-digit number.');
+
+        $user = new User();
+        $user->setName('test');
+        $user->setEmail('testing@example.com');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('123');
+
+        $processor = new UserProcessor(
+            $this->createMock(EntityManagerInterface::class),
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPatchThrowsExceptionIfNameIsInvalid(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Name cannot be empty.');
+
+        $user = new User();
+        $this->setUserId($user, 1);
+        $user->setName('');
+        $user->setEmail('testing@example.com');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $existingUser = new User();
+        $this->setUserId($existingUser, 1);
+
+        $repo = $this->createMock(EntityRepository::class);
+        $repo->method('find')->with(1)->willReturn($existingUser);
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->method('getRepository')->willReturn($repo);
+
+        $processor = new UserProcessor(
+            $entityManager,
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Patch());
+    }
+
+    public function testProcessPostThrowsExceptionIfEmailIsAlreadyInUse(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Email is already in use.');
+
+        $user = new User();
+        $user->setPassword('password');
+        $user->setName('Duplicate');
+        $user->setEmail('duplicate@example.com');
+        $user->setEmployeeCode('1234567');
+
+        $existingUser = new User(); // Simulate existing user with the same email
+
+        $mockRepo = $this->createMock(EntityRepository::class);
+        $mockRepo->method('findOneBy')->with(['email' => 'duplicate@example.com'])->willReturn($existingUser);
+
+        $mockEntityManager = $this->createMock(EntityManagerInterface::class);
+        $mockEntityManager->method('getRepository')->with(User::class)->willReturn($mockRepo);
+
+        $processor = new UserProcessor(
+            $mockEntityManager,
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class)
+        );
+
+        $processor->process($user, new Post());
+    }
+
+    public function testProcessPatchThrowsExceptionIfEmailIsInvalid(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Invalid email address.');
+
+        $user = new User();
+        $this->setUserId($user, 1);
+        $user->setName('test');
+        $user->setEmail('test');
+        $user->setPassword('plain');
+        $user->setEmployeeCode('1234567');
+
+        $existingUser = new User();
+        $this->setUserId($existingUser, 1);
+
+        $repo = $this->createMock(EntityRepository::class);
+        $repo->method('find')->with(1)->willReturn($existingUser);
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->method('getRepository')->willReturn($repo);
+
+        $processor = new UserProcessor(
+            $entityManager,
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class),
+        );
+
+        $processor->process($user, new Patch());
+    }
+
+    public function testProcessPatchThrowsExceptionIfUserNotFound(): void
+    {
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('User not found.');
+        $user = new User();
+        $this->setUserId($user, 999);
+        $user->setName('Updated Name');
+        // Simulate missing user
+        $mockRepo = $this->createMock(EntityRepository::class);
+        $mockRepo->method('find')->with(999)->willReturn(null);
+        $mockEntityManager = $this->createMock(EntityManagerInterface::class);
+        $mockEntityManager->method('getRepository')->willReturn($mockRepo);
+        $processor = new UserProcessor(
+            $mockEntityManager,
+            $this->createMock(UserPasswordHasherInterface::class),
+            $this->createMock(ValidatorInterface::class)
+        );
+        $processor->process($user, new Patch());
     }
 
     private function setUserId(User $user, int $id): void
