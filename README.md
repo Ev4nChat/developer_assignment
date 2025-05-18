@@ -27,7 +27,9 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
 ### ⚙️ Installation
 1. Clone the repo:
 
-   `git clone https://github.com/Ev4nChat/developer_assignment.git`
+   `git clone https://github.com/Ev4nChat/developer_assignment.git` and then from your IDE switch to 
+branch `developer-assignment-v1`
+
 2. Set up:
 
    `docker-compose up -d`
@@ -39,7 +41,7 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
     DATABASE_URL="mysql://root:root@mysql:3306/vacation?serverVersion=8.0"
     JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
     JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
-    JWT_PASSPHRASE=
+    JWT_PASSPHRASE=bXktZW5jb2RlZC1qd3QtcGFzc3BocmFzZQ==
     ```
 
 4. Run `docker-compose exec php composer install`
@@ -58,11 +60,12 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
     Run the following commands from the root of the Symfony backend project:
     
     ```
-    mkdir -p config/jwt
-    openssl genrsa -out config/jwt/private.pem 4096
-    openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem
+    mkdir -p backend/config/jwt
+    openssl genrsa -aes256 -out backend/config/jwt/private.pem 4096
+    openssl rsa -pubout -in backend/config/jwt/private.pem -out backend/config/jwt/public.pem
     
     ```
+   Once you are asked for the passphrase, use the `JWT_PASSPHRASE` from the `.env` file.
 
 7. Run database seeder
    `docker-compose exec php bin/console app:seed-database`
