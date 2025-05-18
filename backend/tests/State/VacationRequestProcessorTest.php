@@ -3,7 +3,6 @@
 namespace App\Tests\State;
 
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Entity\User;
 use App\Entity\VacationRequest;
@@ -13,6 +12,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 class VacationRequestProcessorTest extends TestCase
 {
@@ -67,5 +67,48 @@ class VacationRequestProcessorTest extends TestCase
         $this->assertSame(VacationStatus::Pending, $result->getStatus());
         $this->assertInstanceOf(DateTimeInterface::class, $result->getStartDate());
         $this->assertInstanceOf(DateTimeInterface::class, $result->getEndDate());
+    }
+
+    public function testProcessThrowsExceptionIfDatesAreInPast(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Start date and end date must not be in the past.');
+
+        $user = $this->createMock(User::class);
+
+        $request = new VacationRequest();
+        $request->setStartDate(new DateTimeImmutable('-2 days'));
+        $request->setEndDate(new DateTimeImmutable('-1 day'));
+        $request->setReason('Test reason');
+
+        $security = $this->createMock(Security::class);
+        $security->method('getUser')->willReturn($user);
+
+        $mockPersistProcessor = $this->createMock(ProcessorInterface::class);
+
+        $processor = new VacationRequestProcessor($mockPersistProcessor, $security);
+        $processor->process($request, new Post());
+    }
+
+    public function testProcessThrowsExceptionIfReasonIsMissing(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Vacation reason must be provided.');
+
+        $user = $this->createMock(User::class);
+
+        $request = new VacationRequest();
+        $request->setStartDate(new DateTimeImmutable('+1 day'));
+        $request->setEndDate(new DateTimeImmutable('+2 days'));
+        $request->setReason('');
+
+        $security = $this->createMock(Security::class);
+        $security->method('getUser')->willReturn($user);
+
+        $persistProcessor = $this->createMock(ProcessorInterface::class);
+
+        $processor = new VacationRequestProcessor($persistProcessor, $security);
+
+        $processor->process($request, new Post());
     }
 }

@@ -10,7 +10,7 @@ use App\Entity\VacationRequest;
 use App\Enum\VacationStatus;
 use DateTimeImmutable;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 /**
  * @implements ProcessorInterface<VacationRequest, VacationRequest>
@@ -32,10 +32,14 @@ class VacationRequestProcessor implements ProcessorInterface
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = [])
     {
         if ($operation instanceof Post) {
+            if (empty($data->getReason())) {
+                throw new BadRequestException('Vacation reason must be provided.');
+            }
+
             $now = new DateTimeImmutable('today');
 
             if ($data->getStartDate() < $now || $data->getEndDate() < $now) {
-                throw new BadRequestHttpException('Start date and end date must not be in the past.');
+                throw new BadRequestException('Start date and end date must not be in the past.');
             }
 
             $user = $this->security->getUser();
