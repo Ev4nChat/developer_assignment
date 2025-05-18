@@ -36,7 +36,7 @@ Built using React for the frontend and Symfony (PHP) & Doctrine for the backend 
 
     ```
     APP_ENV=dev
-    DATABASE_URL="mysql://user:password@127.0.0.1:3306/vacation?serverVersion=8.0"
+    DATABASE_URL="mysql://root:root@mysql:3306/vacation?serverVersion=8.0"
     JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
     JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
     JWT_PASSPHRASE=
